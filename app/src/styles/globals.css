@@ -1,0 +1,1018 @@
+/* ============================================================
+   RPG Map Editor — mobile-first design system
+   ============================================================
+   Tokens, layout and component styles live here. The rest of
+   the app is deliberately content-free and reusable.
+   ============================================================ */
+
+:root {
+  /* Colour tokens */
+  --bg: #0e1116;
+  --bg-elev: #161b22;
+  --bg-raised: #1e2630;
+  --bg-hover: #262f3a;
+  --border: #2f3a47;
+  --border-strong: #3b4656;
+  --text: #e6edf3;
+  --text-dim: #9aa8b7;
+  --text-muted: #5f6e7f;
+  --accent: #4f8ef7;
+  --accent-strong: #6f9cf9;
+  --accent-bg: rgba(79, 142, 247, 0.14);
+  --accent-border: rgba(79, 142, 247, 0.45);
+  --danger: #ff5c5c;
+  --success: #54d68c;
+  --warning: #f5b942;
+
+  /* Focus ring used for keyboard / screen reader users */
+  --focus: var(--accent);
+
+  /* Spacing scale (8pt) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
+
+  /* Shadows (soft, glow-based so they read on dark UI) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.38);
+
+  /* Layout tokens */
+  --header-h: 48px;
+  --toolbar-h: 56px;
+  --min-touch: 44px;
+
+  font-family: "Inter", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+
+  /* Prevent iOS zoom on focus in landscape */
+  @media (max-width: 768px) {
+    :root {
+      font-size: 14px;
+    }
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Thin, dark scrollbars so overflowing panels don't show browser chrome. */
+.map-inspect,
+.terrain-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  color: var(--text);
+  background: var(--bg);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--accent-strong);
+}
+
+/* ---------- Utility ---------- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Screen shell ---------- */
+.map-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---------- Toolbar ---------- */
+.map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+  min-height: var(--toolbar-h);
+}
+
+.toolbar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.toolbar-group .text-input {
+  min-width: 200px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.text-input {
+  min-width: 0;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.text-input:focus-visible {
+  outline: 3px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+/* ---------- Grid ---------- */
+.map-grid {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map-canvas-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.map-canvas:active {
+  cursor: crosshair;
+}
+
+.map-canvas.tool-pick {
+  cursor: copy;
+}
+
+.map-canvas.tool-fill {
+  cursor: cell;
+}
+
+.map-canvas.is-painting.tool-paint,
+.map-canvas.is-painting.tool-erase {
+  cursor: crosshair;
+}
+
+/* Floating zoom controls: the only way to zoom without a wheel or a pinch. */
+.map-zoom {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--min-touch);
+  height: var(--min-touch);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  background: rgba(22, 27, 34, 0.92);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.zoom-btn:hover {
+  background: var(--bg-hover);
+}
+
+.zoom-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Terrain palette ---------- */
+.map-inspect {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3) var(--space-3) var(--space-3);
+  background: var(--bg-elev);
+  border-top: 1px solid var(--border);
+  overflow-y: auto;
+  flex: 0 1 auto;
+  max-height: 42vh;
+}
+
+.inspect-col {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.terrain-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: var(--space-2);
+}
+
+.color-swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-2);
+  background: var(--bg-raised);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  cursor: pointer;
+  min-height: 64px;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.color-swatch:active {
+  transform: scale(0.96);
+}
+
+.color-swatch:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.color-swatch.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.color-swatch-color {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: var(--sw-color);
+  position: relative;
+  transition: background 0.12s ease;
+}
+
+.color-swatch.is-selected .color-swatch-color {
+  background: var(--sw-alt);
+}
+
+.color-swatch-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.color-swatch-symbol {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.color-swatch-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ---------- Toolbar action chips ---------- */
+.map-grid-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.map-grid-actions .chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: var(--min-touch);
+}
+
+/* ---------- Drawing tools ---------- */
+.map-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+}
+
+.tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.tool-chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: 38px;
+}
+
+.tool-size {
+  width: 140px;
+}
+
+.tool-size .stepper {
+  min-width: 140px;
+}
+
+.tool-hint {
+  margin: 0 0 10px auto;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ---------- Inspector ---------- */
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 420px;
+}
+
+.inspector > * {
+  min-width: 0;
+}
+
+.note-input {
+  min-height: 64px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.note-input:focus-visible {
+  outline: 3px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+.note-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  min-height: var(--min-touch);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.chip:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.chip-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.chip-primary:hover {
+  background: var(--accent-strong);
+}
+
+.chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chip:disabled:hover {
+  background: var(--bg-raised);
+  border-color: var(--border-strong);
+}
+
+.chip-secondary {
+  background: var(--bg-raised);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.chip-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.chip-sm {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.chip-md {
+  font-size: 14px;
+  padding: 8px 14px;
+}
+
+/* ---------- Steppers ---------- */
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stepper-control {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-raised);
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg);
+  border: 0;
+  cursor: pointer;
+}
+
+.stepper-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -1px;
+}
+
+.stepper-input {
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  appearance: textfield;
+}
+
+/* The steppers have their own +/- buttons; native spinners just get in the way. */
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.stepper-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* ---------- Panels ---------- */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.panel-header-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3, h4 {
+  color: var(--text);
+}
+
+/* ---------- Responsive refinements ---------- */
+/* Phones: compact toolbar, palette as a single scrolling strip, and a
+   two-up inspector so the canvas keeps most of the screen. */
+@media (max-width: 640px) {
+  /* Action chips get their own full-width row so each stays thumb-sized. */
+  .panel-header {
+    flex-wrap: wrap;
+  }
+
+  .panel-header-actions {
+    flex: 1 1 100%;
+  }
+
+  .map-grid-actions {
+    width: 100%;
+  }
+
+  .map-grid-actions .chip {
+    flex: 1 1 0;
+  }
+
+  .map-tools {
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .tool-group {
+    flex: 1 1 100%;
+  }
+
+  .tool-chip {
+    flex: 1 1 0;
+    font-size: 11px;
+    padding: 4px 6px;
+    min-height: 40px;
+  }
+
+  .tool-size {
+    width: 140px;
+  }
+
+  .tool-size .stepper {
+    min-width: 140px;
+  }
+
+  .tool-hint {
+    display: none;
+  }
+
+  .map-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    min-height: 0;
+  }
+
+  .toolbar-group {
+    flex: 1 1 calc(50% - var(--space-2));
+  }
+
+  .toolbar-group .text-input {
+    min-width: 0;
+  }
+
+  .toolbar-group:first-child {
+    flex: 1 1 100%;
+  }
+
+  .map-inspect {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    max-height: 46vh;
+  }
+
+  .inspect-col {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .terrain-list {
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .color-swatch {
+    flex: 0 0 64px;
+    min-height: 56px;
+    padding: var(--space-1);
+  }
+
+  .inspector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    max-width: none;
+  }
+
+  .inspector .note-input {
+    grid-column: 1 / -1;
+    min-height: 48px;
+  }
+
+  .map-canvas-wrap {
+    min-height: 200px;
+  }
+}
+
+/* ---------- Print setup ---------- */
+.print-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: rgba(4, 7, 10, 0.74);
+}
+
+.print-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(980px, 100%);
+  max-height: min(92vh, 940px);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.print-dialog:focus {
+  outline: none;
+}
+
+.print-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+.print-dialog-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.print-lede {
+  margin: 4px 0 0;
+  max-width: 56ch;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.print-close {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+  color: var(--text-dim);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.print-close:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.print-dialog-body {
+  display: grid;
+  grid-template-columns: minmax(0, 290px) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-4);
+  overflow: auto;
+}
+
+.print-options {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.print-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.print-segment {
+  display: flex;
+  gap: 6px;
+}
+
+.print-segment .chip {
+  flex: 1 1 0;
+  min-height: 38px;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.select {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.select:focus-visible {
+  outline: 3px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+.print-toggles {
+  gap: 2px;
+}
+
+.print-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 34px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.print-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+
+.print-preview-col {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+}
+
+.print-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.print-preview-item {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  padding: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.print-preview-item .print-svg {
+  display: block;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.print-preview-item figcaption {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.print-preview-more {
+  align-content: center;
+  min-width: 84px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.print-summary {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.print-summary strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.print-warning {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--warning);
+}
+
+.print-dialog-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--bg-raised);
+}
+
+.print-tip {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.print-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* The printed pages themselves: only visible to the print engine. */
+.print-doc {
+  display: none;
+}
+
+.print-sheet {
+  break-after: page;
+  page-break-after: always;
+  line-height: 0;
+  font-size: 0;
+}
+
+.print-sheet:last-child {
+  break-after: auto;
+  page-break-after: avoid;
+}
+
+.print-svg {
+  display: block;
+}
+
+@page {
+  margin: 0;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body {
+    margin: 0;
+    color: #111111;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .map-screen,
+  .print-dialog,
+  .print-backdrop {
+    display: none !important;
+  }
+
+  .print-doc {
+    display: block;
+  }
+
+  .print-svg {
+    display: block;
+    page-break-inside: avoid;
+  }
+}
+
+@media (max-width: 900px) {
+  .print-dialog-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .print-dialog {
+    max-height: 94vh;
+  }
+
+  .print-dialog-head,
+  .print-dialog-body,
+  .print-dialog-foot {
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 520px) {
+  .print-dialog-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .print-actions {
+    width: 100%;
+  }
+
+  .print-actions .chip {
+    flex: 1 1 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .map-grid-actions .chip {
+    font-size: 12px;
+    padding: 4px 6px;
+    min-height: 40px;
+  }
+}
