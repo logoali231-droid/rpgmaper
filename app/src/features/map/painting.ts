@@ -1,4 +1,4 @@
-import type { Tile } from "../../components/MapGrid";
+import type { Tile } from "./model";
 
 /** A single map square. */
 export interface Cell {
@@ -6,7 +6,19 @@ export interface Cell {
   row: number;
 }
 
-export type ToolId = "paint" | "line" | "rect" | "fill" | "pick" | "erase";
+export type ToolId =
+  | "paint"
+  | "line"
+  | "rect"
+  | "fill"
+  | "pick"
+  | "erase"
+  | "scatter"
+  | "fog"
+  | "select"
+  | "text"
+  | "pin"
+  | "ruler";
 
 export const MIN_BRUSH = 1;
 export const MAX_BRUSH = 8;
@@ -133,6 +145,32 @@ export function floodFill(
   }
 
   return cells;
+}
+
+/** Mirror squares across the vertical, horizontal or both axes. */
+export function mirrorCells(
+  cells: Cell[],
+  cols: number,
+  rows: number
+): Cell[] {
+  const out: Cell[] = [];
+  const seen = new Set<string>();
+
+  for (const cell of cells) {
+    const mirrored: Cell[] = [
+      { col: cols - 1 - cell.col, row: cell.row },
+      { col: cell.col, row: rows - 1 - cell.row },
+      { col: cols - 1 - cell.col, row: rows - 1 - cell.row },
+    ];
+    for (const next of [cell, ...mirrored]) {
+      const key = cellKey(next.col, next.row);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(next);
+    }
+  }
+
+  return out;
 }
 
 /** Drop squares already covered by this stroke or already the target terrain. */

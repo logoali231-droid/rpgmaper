@@ -1,7 +1,9 @@
-import type { Terrain, Tile } from "./MapGrid";
+import type { MapLabel, Terrain, Tile } from "./MapGrid";
+import type { MapPin } from "../features/map/model";
 import {
   FEET_PER_SQUARE,
   collectNotes,
+  collectPins,
   columnLabel,
   describeSquare,
   patternFor,
@@ -9,6 +11,7 @@ import {
   units,
   wrapText,
   type NoteEntry,
+  type PinEntry,
   type PatternKind,
   type PrintLayout,
   type PrintOptions,
@@ -73,6 +76,8 @@ interface SheetProps {
   page: PrintPage;
   tiles: Tile[][];
   terrains: Terrain[];
+  labels?: MapLabel[];
+  pins?: MapPin[];
   mapName: string;
   options: PrintOptions;
   /** Render at this pixel width instead of true paper size (screen preview). */
@@ -85,6 +90,8 @@ export function PrintSheet({
   page,
   tiles,
   terrains,
+  labels,
+  pins,
   mapName,
   options,
   pixelWidth,
@@ -196,6 +203,78 @@ export function PrintSheet({
           });
         })}
       </g>
+
+      {/* --- Room labels drawn on their squares --- */}
+      {labels && labels.length > 0 ? (
+        <g fontFamily={FONT}>
+          {labels
+            .filter(
+              (label) =>
+                label.col >= page.startCol &&
+                label.col <= endCol &&
+                label.row >= page.startRow &&
+                label.row <= endRow
+            )
+            .map((label) => (
+              <text
+                key={label.id}
+                x={gridX + (label.col - page.startCol + 0.5) * cell}
+                y={gridY + (label.row - page.startRow + 0.58) * cell}
+                fontSize={cell * 0.3}
+                fontWeight="600"
+                fill={options.style === "ink" ? INK : "#0d1520"}
+                textAnchor="middle"
+                paintOrder="stroke"
+                stroke={PAPER}
+                strokeWidth={cell * 0.07}
+              >
+                {label.text}
+              </text>
+            ))}
+        </g>
+      ) : null}
+
+      {/* --- Numbered pins, matching the printed key --- */}
+      {options.includePins && pins && pins.length > 0 ? (
+        <g fontFamily={FONT}>
+          {pins
+            .filter(
+              (pin) =>
+                pin.col >= page.startCol &&
+                pin.col <= endCol &&
+                pin.row >= page.startRow &&
+                pin.row <= endRow
+            )
+            .map((pin) => {
+              const cx = gridX + (pin.col - page.startCol + 0.5) * cell;
+              const cy = gridY + (pin.row - page.startRow + 0.5) * cell;
+              const radius = Math.max(7, Math.min(cell * 0.32, 16));
+              const text = pin.label.trim().slice(0, 3) || "?";
+              return (
+                <g key={pin.id}>
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={radius}
+                    fill={PAPER}
+                    stroke={INK}
+                    strokeWidth="1.3"
+                  />
+                  <text
+                    x={cx}
+                    y={cy + radius * 0.36}
+                    fontSize={radius * (text.length > 2 ? 0.85 : 1.05)}
+                    fontWeight="700"
+                    fill={INK}
+                    textAnchor="middle"
+                  >
+                    {text}
+                  </text>
+                </g>
+              );
+            })}
+        </g>
+      ) : null}
 
       {/* --- Sheet outline + trim marks --- */}
       <rect
@@ -382,6 +461,127 @@ export function NotesSheet({
   );
 }
 
+/* ---------- Pin key appendix ---------- */
+
+/** Gap under each key entry, in SVG units. */
+const PIN_ROW_GAP = 5;
+
+interface PinKeyProps {
+  layout: PrintLayout;
+  entries: PinEntry[];
+  mapName: string;
+  pageIndex: number;
+  pageCount: number;
+  pixelWidth?: number;
+}
+
+/** Number, square reference and GM note for every pin on the map. */
+export function PinKeySheet({
+  layout,
+  entries,
+  mapName,
+  pageIndex,
+  pageCount,
+  pixelWidth,
+}: PinKeyProps) {
+  const width = units(layout.pageWidthIn);
+  const height = units(layout.pageHeightIn);
+  const areaX = units(layout.area.x);
+  const areaY = units(layout.area.y);
+  const areaW = units(layout.area.widthIn);
+  const maxChars = Math.max(12, notesChars(layout) - 16);
+  const refX = areaX + 26;
+  const noteX = areaX + 64;
+  // The badge is a small ring: show at most three characters, exactly like
+  // the marker drawn on the map, so long labels cannot spill off the margin.
+  const badgeText = (label: string) => label.trim().slice(0, 3) || "?";
+
+  const wrapped = entries.map((entry) => ({
+    entry,
+    lines: wrapText(entry.note || "—", maxChars),
+  }));
+  const blocks = wrapped.map(({ entry, lines }, index) => ({
+    entry,
+    lines,
+    y:
+      areaY +
+      14 +
+      wrapped
+        .slice(0, index)
+        .reduce(
+          (sum, prior) => sum + prior.lines.length * NOTES_LINE_H + PIN_ROW_GAP,
+          0
+        ),
+  }));
+
+  return (
+    <svg
+      className="print-svg"
+      width={pixelWidth ?? `${layout.pageWidthIn}in`}
+      height={pixelWidth ? (pixelWidth * height) / width : `${layout.pageHeightIn}in`}
+      viewBox={`0 0 ${width} ${height}`}
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label={`Pin key, page ${pageIndex} of ${pageCount}`}
+    >
+      <rect width={width} height={height} fill={PAPER} />
+      <text x={areaX} y={areaY - 12} fontFamily={FONT} fontSize="15" fontWeight="700" fill={INK}>
+        {`Pin key — ${mapName.trim() || "Untitled map"}`}
+      </text>
+      <text
+        x={areaX + areaW}
+        y={areaY - 12}
+        fontFamily={FONT}
+        fontSize="10"
+        fill={INK_SOFT}
+        textAnchor="end"
+      >
+        {`Page ${pageIndex} of ${pageCount}`}
+      </text>
+      <line
+        x1={areaX}
+        y1={areaY - 6}
+        x2={areaX + areaW}
+        y2={areaY - 6}
+        stroke={INK_FAINT}
+        strokeWidth="0.7"
+      />
+      <g fontFamily={FONT} fontSize={NOTES_FONT}>
+        {blocks.map(({ entry, lines, y }) => (
+          <g key={`${entry.label}-${entry.ref}`}>
+            <circle
+              cx={areaX + 9}
+              cy={y - 3}
+              r="8"
+              fill={PAPER}
+              stroke={INK}
+              strokeWidth="1.2"
+            />
+            <text
+              x={areaX + 9}
+              y={y}
+              fontSize={badgeText(entry.label).length > 1 ? 7 : 8.4}
+              fontWeight="700"
+              textAnchor="middle"
+              fill={INK}
+            >
+              {badgeText(entry.label)}
+            </text>
+            <text x={refX} y={y} fontWeight="700" fill={INK}>
+              {entry.ref}
+            </text>
+            {lines.map((line, i) => (
+              <text key={i} x={noteX} y={y + i * NOTES_LINE_H} fill={INK}>
+                {line}
+              </text>
+            ))}
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
 /* ---------- Whole document ---------- */
 
 interface DocumentProps {
@@ -390,6 +590,8 @@ interface DocumentProps {
   columns: number;
   rows: number;
   terrains: Terrain[];
+  labels?: MapLabel[];
+  pins?: MapPin[];
   options: PrintOptions;
 }
 
@@ -413,6 +615,29 @@ function paginateNotes(entries: NoteEntry[], layout: PrintLayout): NoteEntry[][]
   return pages;
 }
 
+function paginatePins(entries: PinEntry[], layout: PrintLayout): PinEntry[][] {
+  const maxChars = Math.max(12, notesChars(layout) - 16);
+  // Budget in SVG units, not lines: every entry also carries a row gap, so
+  // counting lines alone let a full page spill past the bottom margin.
+  const usable = units(layout.area.heightIn) - 30;
+  const pages: PinEntry[][] = [];
+  let current: PinEntry[] = [];
+  let used = 0;
+  for (const entry of entries) {
+    const lines = Math.max(1, wrapText(entry.note || "—", maxChars).length);
+    const cost = lines * NOTES_LINE_H + PIN_ROW_GAP;
+    if (used + cost > usable && current.length) {
+      pages.push(current);
+      current = [];
+      used = 0;
+    }
+    current.push(entry);
+    used += cost;
+  }
+  if (current.length) pages.push(current);
+  return pages;
+}
+
 /** Hidden on screen, one printed page per sheet. */
 export function PrintDocument({
   mapName,
@@ -420,11 +645,15 @@ export function PrintDocument({
   columns,
   rows,
   terrains,
+  labels,
+  pins,
   options,
 }: DocumentProps) {
   const layout = planPrint(columns, rows, options);
   const notes = options.includeNotes ? collectNotes(tiles, terrains) : [];
   const notesPages = notes.length ? paginateNotes(notes, layout) : [];
+  const pinKey = options.includePins ? collectPins(pins ?? []) : [];
+  const pinPages = pinKey.length ? paginatePins(pinKey, layout) : [];
 
   return (
     <>
@@ -437,8 +666,21 @@ export function PrintDocument({
               page={page}
               tiles={tiles}
               terrains={terrains}
+              labels={labels}
+              pins={pins}
               mapName={mapName}
               options={options}
+            />
+          </div>
+        ))}
+        {pinPages.map((entries, i) => (
+          <div className="print-sheet" key={`pin-key-${i}`}>
+            <PinKeySheet
+              layout={layout}
+              entries={entries}
+              mapName={mapName}
+              pageIndex={i + 1}
+              pageCount={pinPages.length}
             />
           </div>
         ))}
@@ -472,6 +714,8 @@ export function PrintPreview({
   columns,
   rows,
   terrains,
+  labels,
+  pins,
   options,
   limit = 4,
   width = 150,
@@ -489,6 +733,8 @@ export function PrintPreview({
             page={page}
             tiles={tiles}
             terrains={terrains}
+            labels={labels}
+            pins={pins}
             mapName={mapName}
             options={options}
             pixelWidth={width}

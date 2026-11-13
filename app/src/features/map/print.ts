@@ -1,4 +1,5 @@
 import type { Terrain, Tile } from "../../components/MapGrid";
+import type { MapPin } from "./model";
 
 /* ============================================================
    Print layout for tabletop RPG maps
@@ -67,6 +68,8 @@ export interface PrintOptions {
   showCoords: boolean;
   showLegend: boolean;
   includeNotes: boolean;
+  /** Numbered markers on the map and a printed key of pins and notes. */
+  includePins: boolean;
 }
 
 export const DEFAULT_PRINT_OPTIONS: PrintOptions = {
@@ -78,6 +81,7 @@ export const DEFAULT_PRINT_OPTIONS: PrintOptions = {
   showCoords: true,
   showLegend: true,
   includeNotes: true,
+  includePins: true,
 };
 
 export interface PrintPage {
@@ -270,6 +274,41 @@ export function collectNotes(
     });
   });
   return entries.sort((a, b) => a.row - b.row || a.col - b.col);
+}
+
+/* ---------- Pin key ---------- */
+
+export interface PinEntry {
+  /** Badge text as it appears on the map, e.g. "3". */
+  label: string;
+  /** Tabletop reference for its square, e.g. "C7". */
+  ref: string;
+  col: number;
+  row: number;
+  note: string;
+}
+
+/** Pins in badge order so the key reads 1, 2, 3… down the page. */
+export function collectPins(pins: MapPin[]): PinEntry[] {
+  const asNumber = (label: string) => {
+    const value = Number(label);
+    return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+  };
+  return pins
+    .map((pin) => ({
+      label: pin.label.trim() || "?",
+      ref: tileRef(pin.col, pin.row),
+      col: pin.col,
+      row: pin.row,
+      note: pin.note.trim(),
+    }))
+    .sort(
+      (a, b) =>
+        asNumber(a.label) - asNumber(b.label) ||
+        a.label.localeCompare(b.label) ||
+        a.row - b.row ||
+        a.col - b.col
+    );
 }
 
 /** Greedy word wrap; the SVG text renderer needs explicit lines. */

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import type { Terrain, Tile } from "./MapGrid";
+import type { MapLabel, Terrain, Tile } from "./MapGrid";
+import type { MapPin } from "../features/map/model";
 import { Chip } from "./ui/Chip";
 import { PrintPreview } from "./PrintSheets";
 import {
@@ -18,6 +19,8 @@ interface PrintDialogProps {
   columns: number;
   rows: number;
   terrains: Terrain[];
+  labels?: MapLabel[];
+  pins?: MapPin[];
   options: PrintOptions;
   onChange: (next: PrintOptions) => void;
   onClose: () => void;
@@ -33,6 +36,8 @@ export function PrintDialog({
   columns,
   rows,
   terrains,
+  labels,
+  pins,
   options,
   onChange,
   onClose,
@@ -207,6 +212,14 @@ export function PrintDialog({
                 />
                 <span>GM notes appendix</span>
               </label>
+              <label className="print-check">
+                <input
+                  type="checkbox"
+                  checked={options.includePins}
+                  onChange={(e) => set("includePins", e.target.checked)}
+                />
+                <span>Pin key &amp; markers</span>
+              </label>
             </div>
           </div>
 
@@ -217,6 +230,8 @@ export function PrintDialog({
               columns={columns}
               rows={rows}
               terrains={terrains}
+              labels={labels}
+              pins={pins}
               options={options}
             />
             <p className="print-summary">

@@ -8,6 +8,8 @@ export interface ColorSwatchProps
   color: string;
   /** Lighter colour used for the "selected/active" state. */
   altColor: string;
+  /** Imported tileset preview shown instead of the flat colour. */
+  image?: string;
   selected: boolean;
   onChange: () => void;
 }
@@ -21,6 +23,7 @@ export function ColorSwatch({
   symbol,
   color,
   altColor,
+  image,
   selected,
   onChange,
   className = "",
@@ -33,6 +36,15 @@ export function ColorSwatch({
     ...style,
   } as CSSProperties;
 
+  const imageStyle = image
+    ? {
+        backgroundImage: `url(${image})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
+    : undefined;
+
   return (
     <button
       type="button"
@@ -40,9 +52,14 @@ export function ColorSwatch({
       style={swatchStyle}
       onClick={onChange}
       aria-pressed={selected}
+      title={label}
       {...rest}
     >
-      <span className="color-swatch-color" aria-hidden="true" />
+      <span
+        className="color-swatch-color"
+        style={imageStyle}
+        aria-hidden="true"
+      />
       <span className="color-swatch-meta">
         <span className="color-swatch-symbol">{symbol}</span>
         <span className="color-swatch-label">{label}</span>

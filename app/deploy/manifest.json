@@ -1,0 +1,13 @@
+{
+  "entrypoint": "worker.bundle.js",
+  "compatibilityDate": "2026-11-13",
+  "modules": [
+    {
+      "name": "worker.bundle.js",
+      "type": "esm",
+      "path": "./worker.bundle.js"
+    }
+  ],
+  "assetsDirectory": "../dist",
+  "spa": true
+}

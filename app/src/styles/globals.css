@@ -91,6 +91,7 @@ body {
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -147,6 +148,12 @@ a {
   gap: 4px;
   flex: 0 1 auto;
   min-width: 0;
+}
+
+/* Phone-only disclosure for the document settings; the desktop layout keeps
+   the settings row visible and never shows this button. */
+.settings-toggle {
+  display: none;
 }
 
 .toolbar-group .text-input {
@@ -217,6 +224,10 @@ a {
   cursor: cell;
 }
 
+.map-canvas.tool-fog {
+  cursor: crosshair;
+}
+
 .map-canvas.is-painting.tool-paint,
 .map-canvas.is-painting.tool-erase {
   cursor: crosshair;
@@ -258,6 +269,42 @@ a {
 .zoom-btn:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Phone-only fold controls. The tools strip and the palette sheet reuse these
+   on small screens; desktop never shows them. */
+.tools-toggle,
+.sheet-toggle,
+.sheet-layers {
+  display: none;
+}
+
+.tools-toggle,
+.sheet-toggle {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 44px;
+  padding: 6px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tools-toggle-caret,
+.sheet-toggle-caret {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent-strong);
+  white-space: nowrap;
 }
 
 /* ---------- Terrain palette ---------- */
@@ -402,6 +449,96 @@ a {
   line-height: 1.4;
   color: var(--text-dim);
   text-align: right;
+}
+
+.view-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.view-group .chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: 38px;
+}
+
+/* ---------- Layers ---------- */
+.map-layers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--space-3);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.layer-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.layer-chip {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-raised);
+}
+
+.layer-chip.is-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.layer-name {
+  min-height: 34px;
+  padding: 5px 11px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.layer-chip.is-active .layer-name {
+  background: var(--accent);
+  color: #fff;
+}
+
+.layer-eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.layer-eye[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+}
+
+.layer-eye[aria-pressed="false"] {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-dim);
+  opacity: 0.7;
+}
+
+.layer-name:focus-visible,
+.layer-eye:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
 }
 
 /* ---------- Inspector ---------- */
@@ -626,15 +763,107 @@ h1, h2, h3, h4 {
     min-height: 40px;
   }
 
+  /* Brush and view toggles share one compact row on phones. */
   .tool-size {
-    width: 140px;
+    width: 96px;
   }
 
   .tool-size .stepper {
-    min-width: 140px;
+    min-width: 96px;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+
+  .tool-size .stepper > .field-label {
+    display: none;
+  }
+
+  .tool-size .stepper-btn {
+    width: 30px;
+    font-size: 16px;
+  }
+
+  .tool-size .stepper-control {
+    min-height: 38px;
   }
 
   .tool-hint {
+    display: none;
+  }
+
+  .view-group {
+    flex: 1 1 auto;
+  }
+
+  .view-group .chip {
+    flex: 1 1 0;
+    padding: 4px 4px;
+    font-size: 11px;
+    min-height: 38px;
+  }
+
+  .map-layers {
+    padding: 6px var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .layer-group {
+    flex: 1 1 100%;
+  }
+
+  .layer-chip {
+    flex: 1 1 0;
+  }
+
+  .layer-name {
+    flex: 1;
+    padding: 5px 4px;
+    text-align: center;
+    min-height: 38px;
+  }
+
+  .layer-eye {
+    width: 28px;
+    min-height: 38px;
+  }
+
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--space-2);
+    padding: 9px var(--space-3);
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .settings-toggle::after {
+    content: "▾";
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .settings-toggle[aria-expanded="true"]::after {
+    content: "▴";
+  }
+
+  .settings-toggle:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+  }
+
+  /* Folded away by default on phones: the canvas and tools come first. */
+  .map-toolbar.is-collapsed {
     display: none;
   }
 
@@ -697,9 +926,734 @@ h1, h2, h3, h4 {
     min-height: 48px;
   }
 
+  /* Phones put the canvas straight under the actions; tools, layers and the
+     palette follow it, so drawing is reachable without scrolling first. */
+  .map-grid > .map-canvas-wrap {
+    order: 1;
+  }
+
+  .map-grid > .map-tools {
+    order: 2;
+  }
+
+  /* Layer tabs move into the palette sheet on phones. */
+  .map-grid > .map-layers {
+    display: none;
+  }
+
+  .map-grid > .map-inspect {
+    order: 4;
+  }
+
+  /* The editor chrome (document settings, actions, tools, layers) is taller
+     than a phone screen, so scroll the page instead of clipping the canvas
+     and the palette out of reach. The base reset pins html/body/#root to the
+     viewport with overflow hidden, which would swallow that scroll. */
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .map-screen {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  /* Keep the tabs and autosave status reachable while scrolling the editor. */
+  .map-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+  }
+
+  .map-shell,
+  .map-grid {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
   .map-canvas-wrap {
+    flex: none;
+    height: 40vh;
+    height: clamp(220px, 40dvh, 340px);
     min-height: 200px;
   }
+
+  /* With the settings unfolded the page is taller, so shrink the canvas a
+     little: a strip of tools stays visible and gives the page a place to
+     start a scroll from (the canvas itself must swallow touches to paint). */
+  .map-screen:has(.map-toolbar.is-open) .map-canvas-wrap {
+    height: clamp(190px, 28dvh, 260px);
+  }
+
+  /* Compact settings so unfolding them costs as little canvas as possible. */
+  .map-toolbar {
+    gap: 6px;
+  }
+
+  .map-toolbar .field-label {
+    font-size: 10px;
+  }
+
+  .map-toolbar .text-input {
+    height: 36px;
+  }
+
+  /* Layer tabs and palette slide up from the bottom edge, so the canvas keeps
+     most of the screen. Folded, it is one bar naming the layer and terrain. */
+  .map-inspect {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 7;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex: none;
+    gap: var(--space-2);
+    max-height: 68vh;
+    max-height: 68dvh;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-strong);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.5);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .map-inspect.is-collapsed {
+    overflow: hidden;
+  }
+
+  .map-inspect.is-collapsed > .inspect-col {
+    display: none;
+  }
+
+  .sheet-toggle {
+    display: flex;
+  }
+
+  .map-inspect.is-open .sheet-toggle {
+    border-radius: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sheet-toggle-text {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .sheet-toggle-text strong {
+    font-size: 13px;
+  }
+
+  .sheet-toggle-text span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .map-inspect .sheet-layers {
+    display: block;
+    padding: 0 2px;
+  }
+
+  .map-inspect .inspect-col {
+    flex: none;
+    min-width: 0;
+  }
+
+  /* Keep the page's last row clear of the folded sheet bar. */
+  .map-screen {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* The tools strip folds to one bar so the canvas can grow. */
+  .map-tools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .map-tools .tools-toggle {
+    display: flex;
+  }
+
+  .map-tools.is-open .tools-toggle {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .map-tools.is-collapsed > :not(.tools-toggle) {
+    display: none;
+  }
+}
+
+/* ---------- Stamp library, selection and labels ---------- */
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+  gap: var(--space-1);
+}
+
+.stamp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.stamp-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.stamp-preview {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stamp-preview canvas {
+  display: block;
+  width: 44px;
+  height: 44px;
+}
+
+.stamp-label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.selection-bar,
+.label-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 6px var(--space-3);
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+}
+
+.selection-info {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.label-editor .text-input {
+  flex: 1 1 160px;
+  height: 36px;
+}
+
+.selection-bar .chip,
+.label-editor .chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: 34px;
+}
+
+.tileset-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.tileset-group .chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: 40px;
+}
+
+.tileset-size {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tileset-size-input {
+  width: 58px;
+  height: 40px;
+  padding: 0 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.tileset-size-label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.tileset-count {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.map-canvas.tool-text {
+  cursor: text;
+}
+
+.map-canvas.tool-pin {
+  cursor: pointer;
+}
+
+/* ---------- Quick-action menu ---------- */
+.context-menu {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 188px;
+  padding: 4px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.context-menu-label {
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.context-menu-item:hover,
+.context-menu-item:focus-visible {
+  background: var(--bg-raised);
+  outline: none;
+}
+
+.context-menu-item:disabled {
+  color: var(--text-dim);
+  cursor: default;
+}
+
+/* ---------- Cloud saves dialog ---------- */
+.cloud-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  grid-template-columns: none;
+}
+
+.cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cloud-current {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.cloud-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cloud-note.is-error {
+  color: var(--danger);
+}
+
+.cloud-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cloud-map-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.cloud-map-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cloud-map-text strong {
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.cloud-map-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cloud-map-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.pin-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
+.pin-input {
+  height: 36px;
+  min-width: 0;
+}
+
+/* Phones: every tool wraps into view — no hidden tools behind a side-scroll. */
+@media (max-width: 640px) {
+  .tool-group {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .tool-chip {
+    flex: 1 1 auto;
+    min-height: 42px;
+  }
+
+  .selection-bar,
+  .label-editor {
+    padding: 6px var(--space-2);
+  }
+
+  .stamp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  }
+}
+
+/* Tablets and narrow laptops: keep the settings to two rows and give the
+   canvas enough height to draw on instead of letting the palette win. */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .toolbar-group {
+    flex: 1 1 22%;
+  }
+
+  .toolbar-group:first-child {
+    flex: 1 1 34%;
+  }
+
+  .toolbar-group.tileset-group {
+    flex: 1 1 56%;
+  }
+
+  .toolbar-group .text-input {
+    min-width: 0;
+  }
+
+  .map-canvas-wrap {
+    min-height: 280px;
+  }
+
+  .map-inspect {
+    max-height: 34vh;
+  }
+}
+
+/* Short screens (phones in landscape): let the canvas take more of the
+   height so a horizontal phone is still usable, and let the page scroll to
+   the palette instead of clipping it. */
+@media (max-width: 900px) and (max-height: 520px) {
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .map-screen {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .map-shell,
+  .map-grid {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .map-canvas-wrap {
+    flex: none;
+    height: 42vh;
+    height: 42dvh;
+    min-height: 170px;
+  }
+
+  .map-inspect {
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---------- Map tabs and autosave ---------- */
+.map-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+
+.map-tab-list {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 2px;
+}
+
+.map-tab {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+.map-tab.is-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.map-tab-name {
+  padding: 7px 10px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-tab-close {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 30px;
+  margin-right: 2px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.map-tab-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.autosave-status {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.autosave-status.is-error {
+  color: #f6a96b;
+}
+
+.map-notice {
+  padding: 2px 8px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--bg-raised);
+  font-size: 11px;
+  color: var(--text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Export dialog ---------- */
+.export-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.export-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+.export-title {
+  margin: 0;
+  font-size: 15px;
+}
+
+.export-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.export-preview {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: #0b0f14;
+}
+
+.export-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.export-hint {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.export-warning {
+  margin: 0;
+  font-size: 12px;
+  color: #f6a96b;
+}
+
+.export-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---------- Shortcuts sheet ---------- */
+.shortcuts-dialog {
+  width: min(780px, 100%);
+}
+
+.shortcuts-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.shortcut-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 13px;
+}
+
+.shortcut-row dt {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.shortcut-row dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.shortcut-row kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
 }
 
 /* ---------- Print setup ---------- */
