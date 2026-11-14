@@ -41,6 +41,7 @@ export const LIGHT_PROPS: Record<
   { brightFeet: number; dimFeet: number; color: string }
 > = {
   campfire: { brightFeet: 20, dimFeet: 40, color: "#ffb15c" },
+  torch: { brightFeet: 15, dimFeet: 30, color: "#ffaa00" },
 };
 
 /**

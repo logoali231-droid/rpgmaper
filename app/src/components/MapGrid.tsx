@@ -89,6 +89,7 @@ const TOOLS: { id: ToolId; label: string; key: string }[] = [
   { id: "pick", label: "Pick", key: "I" },
   { id: "erase", label: "Erase", key: "E" },
   { id: "fog", label: "Fog", key: "G" },
+  { id: "light", label: "Light", key: "U" },
   { id: "scatter", label: "Scatter", key: "S" },
   { id: "select", label: "Select", key: "V" },
   { id: "text", label: "Text", key: "T" },
@@ -105,6 +106,7 @@ const TOOL_BY_KEY: Record<string, ToolId> = {
   i: "pick",
   e: "erase",
   g: "fog",
+  u: "light",
   s: "scatter",
   v: "select",
   t: "text",
@@ -200,7 +202,7 @@ interface MapGridProps {
   onToggleTextures: () => void;
   onToggleSymmetry: () => void;
   onToggleFog: () => void;
-  onTogglePlayerView: () => void;
+  onEnterPlayerMode: () => void;
   onToggleLights: () => void;
   onToggleCompass: () => void;
   onToggleFogCells: (cells: Cell[]) => void;
@@ -333,7 +335,7 @@ export function MapGrid({
   onToggleTextures,
   onToggleSymmetry,
   onToggleFog,
-  onTogglePlayerView,
+  onEnterPlayerMode,
   onToggleLights,
   onToggleCompass,
   onToggleFogCells,
@@ -950,6 +952,13 @@ export function MapGrid({
           outline: e.shiftKey,
         });
         setDragging(true);
+        return;
+      }
+
+      if (tool === "light") {
+        // A torch prop carries its own warm glow, so one click lights a room.
+        onPaintCells([target], "torch", "objects");
+        if (!lights) onToggleLights();
         return;
       }
 
@@ -2056,8 +2065,8 @@ export function MapGrid({
             size="sm"
             variant={playerView ? "primary" : "secondary"}
             aria-pressed={playerView}
-            title="Hide GM marks and secret doors, and black out fogged squares"
-            onClick={onTogglePlayerView}
+            title="Presentation mode: full-screen map, no GM marks, fog blacked out"
+            onClick={onEnterPlayerMode}
           >
             Player
           </Chip>

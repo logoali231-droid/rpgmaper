@@ -7,6 +7,7 @@ import { PrintDocument } from "../../components/PrintSheets";
 import { ExportDialog } from "../../components/ExportDialog";
 import { CloudDialog } from "../../components/CloudDialog";
 import { getSession, loadCloudMap, type CloudSession } from "./cloud";
+import { buildDungeon } from "./dungeon";
 import { ShortcutsDialog } from "../../components/ShortcutsDialog";
 import { DEFAULT_PRINT_OPTIONS, type PrintOptions } from "./print";
 import type { Cell } from "./painting";
@@ -190,6 +191,8 @@ export function MapCanvas() {
   const [compass, setCompass] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  /** Presentation mode: only the map is on screen, as players should see it. */
+  const [presenting, setPresenting] = useState(false);
 
   const [history, setHistory] = useState<Record<string, DocHistory>>({});
 
@@ -346,6 +349,11 @@ export function MapCanvas() {
           const existing = next[cell.row]?.[cell.col];
           if (!existing) continue;
           if (!randomize && existing.terrain === terrainId) continue;
+          // Scattering props thins them out so a forest looks organic instead
+          // of one tree in every square.
+          if (randomize && layerId === "objects" && Math.random() < 0.45) {
+            continue;
+          }
 
           const tile = randomize
             ? {
@@ -832,6 +840,85 @@ export function MapCanvas() {
     [doc.cols, doc.rows, resizeMap]
   );
 
+  const enterPlayerMode = useCallback(() => {
+    setPlayerView(true);
+    setPresenting(true);
+    const root = document.documentElement;
+    if (root.requestFullscreen) {
+      void root.requestFullscreen().catch(() => {
+        // Blocked or unsupported: the CSS still fills the screen.
+      });
+    }
+    // The canvas is about to grow; let the grid refit to the new size.
+    window.setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+  }, []);
+
+  const exitPlayerMode = useCallback(() => {
+    setPresenting(false);
+    setPlayerView(false);
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
+  // Esc leaves presentation mode; so does the browser's own fullscreen exit.
+  useEffect(() => {
+    if (!presenting) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") exitPlayerMode();
+    };
+    const onFullscreen = () => {
+      if (!document.fullscreenElement) {
+        setPresenting(false);
+        setPlayerView(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("fullscreenchange", onFullscreen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("fullscreenchange", onFullscreen);
+    };
+  }, [presenting, exitPlayerMode]);
+
+  /** Fill the current map with a fresh random dungeon, as one undo step. */
+  const generateDungeon = useCallback(() => {
+    const ok = window.confirm(
+      "Generate a random dungeon? It replaces this map's floor, walls, objects and fog."
+    );
+    if (!ok) return;
+    const plan = buildDungeon(doc.cols, doc.rows);
+    pushHistory(snapshotOf(doc));
+    updateDoc((current) => {
+      const blank = (terrain: string) =>
+        Array.from({ length: current.rows }, () =>
+          Array.from({ length: current.cols }, () => ({ terrain, note: "" }))
+        );
+      const floor = blank("grass");
+      const walls = blank("");
+      for (const cell of plan.floors) {
+        floor[cell.row][cell.col] = { terrain: "floor-stone", note: "" };
+      }
+      for (const cell of plan.walls) {
+        walls[cell.row][cell.col] = { terrain: "wall", note: "" };
+      }
+      return {
+        ...current,
+        layers: {
+          floor,
+          walls,
+          objects: blank(""),
+          gm: blank(""),
+        },
+        fog: Array.from({ length: current.rows }, () =>
+          Array.from({ length: current.cols }, () => false)
+        ),
+      };
+    });
+    setSelectedTile(null);
+    setNotice("Rolled a dungeon — reshape it with the brush");
+  }, [doc, pushHistory, updateDoc]);
+
   const saveMap = useCallback(() => {
     const payload = buildSavedMap(doc, terrains);
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -1002,7 +1089,7 @@ export function MapCanvas() {
 
   return (
     <>
-      <div className="map-screen">
+      <div className={`map-screen ${presenting ? "is-presenting" : ""}`}>
         <div className="map-shell">
           <div className="map-tabs">
             <div className="map-tab-list" role="tablist" aria-label="Open maps">
@@ -1050,6 +1137,15 @@ export function MapCanvas() {
               title="Open a map JSON saved from here as a new tab"
             >
               Import
+            </Chip>
+            <Chip
+              size="sm"
+              variant="secondary"
+              onClick={generateDungeon}
+              ariaLabel="Generate a random dungeon"
+              title="Fill this map with random rooms, corridors and walls"
+            >
+              Dungeon
             </Chip>
             <input
               ref={mapFileRef}
@@ -1261,7 +1357,7 @@ export function MapCanvas() {
             onToggleTextures={() => setTextures((value) => !value)}
             onToggleSymmetry={() => setSymmetry((value) => !value)}
             onToggleFog={() => setShowFog((value) => !value)}
-            onTogglePlayerView={() => setPlayerView((value) => !value)}
+            onEnterPlayerMode={enterPlayerMode}
             onToggleLights={() => setLights((value) => !value)}
             onToggleCompass={() => setCompass((value) => !value)}
             onToggleFogCells={onToggleFogCells}
@@ -1279,6 +1375,16 @@ export function MapCanvas() {
             onExport={() => setExportOpen(true)}
           />
         </div>
+
+        {presenting ? (
+          <button
+            type="button"
+            className="presenter-exit"
+            onClick={exitPlayerMode}
+          >
+            Exit presentation (Esc)
+          </button>
+        ) : null}
 
         {cloudOpen && session?.user ? (
           <CloudDialog

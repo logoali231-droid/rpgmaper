@@ -453,6 +453,90 @@ export function drawProp(
       ctx.fill();
       break;
     }
+    case "chair": {
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.28, size * 0.44, size * 0.44, size * 0.32);
+      ctx.fillStyle = light;
+      ctx.fillRect(size * 0.28, size * 0.2, size * 0.44, size * 0.18);
+      break;
+    }
+    case "bed": {
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.14, size * 0.18, size * 0.72, size * 0.66);
+      ctx.fillStyle = "#e8e4da";
+      ctx.fillRect(size * 0.2, size * 0.24, size * 0.6, size * 0.18);
+      ctx.fillStyle = light;
+      ctx.fillRect(size * 0.2, size * 0.48, size * 0.6, size * 0.3);
+      break;
+    }
+    case "crate": {
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.2, size * 0.24, size * 0.6, size * 0.58);
+      ctx.strokeStyle = light;
+      ctx.lineWidth = Math.max(1, size * 0.05);
+      ctx.strokeRect(size * 0.2, size * 0.24, size * 0.6, size * 0.58);
+      ctx.beginPath();
+      ctx.moveTo(size * 0.2, size * 0.24);
+      ctx.lineTo(size * 0.8, size * 0.82);
+      ctx.moveTo(size * 0.8, size * 0.24);
+      ctx.lineTo(size * 0.2, size * 0.82);
+      ctx.stroke();
+      break;
+    }
+    case "bookshelf": {
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.12, size * 0.16, size * 0.76, size * 0.7);
+      ctx.fillStyle = light;
+      for (let shelf = 0; shelf < 3; shelf += 1) {
+        ctx.fillRect(size * 0.18, size * (0.24 + shelf * 0.22), size * 0.64, size * 0.11);
+      }
+      break;
+    }
+    case "fountain": {
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.arc(size * 0.5, size * 0.56, size * 0.34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = base;
+      ctx.beginPath();
+      ctx.arc(size * 0.5, size * 0.56, size * 0.24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(190, 226, 255, 0.8)";
+      ctx.beginPath();
+      ctx.arc(size * 0.5, size * 0.5, size * 0.07, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "rug": {
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.1, size * 0.24, size * 0.8, size * 0.54);
+      ctx.fillStyle = light;
+      ctx.fillRect(size * 0.17, size * 0.3, size * 0.66, size * 0.42);
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.26, size * 0.38, size * 0.48, size * 0.26);
+      break;
+    }
+    case "statue": {
+      ctx.fillStyle = light;
+      ctx.fillRect(size * 0.29, size * 0.72, size * 0.42, size * 0.14);
+      ctx.fillStyle = base;
+      ctx.beginPath();
+      ctx.arc(size * 0.5, size * 0.4, size * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(size * 0.4, size * 0.48, size * 0.2, size * 0.26);
+      break;
+    }
+    case "torch": {
+      ctx.fillStyle = base;
+      ctx.fillRect(size * 0.46, size * 0.5, size * 0.08, size * 0.34);
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.moveTo(size * 0.5, size * 0.16);
+      ctx.quadraticCurveTo(size * 0.7, size * 0.38, size * 0.5, size * 0.52);
+      ctx.quadraticCurveTo(size * 0.3, size * 0.38, size * 0.5, size * 0.16);
+      ctx.fill();
+      break;
+    }
     case "stairs": {
       ctx.fillStyle = base;
       for (let step = 0; step < 4; step += 1) {

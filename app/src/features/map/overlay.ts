@@ -38,13 +38,15 @@ export function drawLight(
   const brightStop = Math.min(0.9, Math.max(0.05, bright / dim));
 
   const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, dim);
-  gradient.addColorStop(0, withAlpha(color, 0.55));
-  gradient.addColorStop(brightStop * 0.65, withAlpha(color, 0.3));
-  gradient.addColorStop(brightStop, withAlpha(color, 0.2));
+  // A hot, almost-white core falling off through the light's own colour reads
+  // as firelight; screen blending keeps it from looking like a flat disc.
+  gradient.addColorStop(0, withAlpha("#ffe6b0", 0.6));
+  gradient.addColorStop(Math.max(0.01, brightStop * 0.5), withAlpha(color, 0.38));
+  gradient.addColorStop(brightStop, withAlpha(color, 0.22));
   gradient.addColorStop(1, withAlpha(color, 0));
 
   ctx.save();
-  ctx.globalCompositeOperation = "lighter";
+  ctx.globalCompositeOperation = "screen";
   ctx.fillStyle = gradient;
   ctx.beginPath();
   ctx.arc(cx, cy, dim, 0, Math.PI * 2);

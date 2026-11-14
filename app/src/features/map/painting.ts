@@ -18,6 +18,7 @@ export type ToolId =
   | "select"
   | "text"
   | "pin"
+  | "light"
   | "ruler";
 
 export const MIN_BRUSH = 1;

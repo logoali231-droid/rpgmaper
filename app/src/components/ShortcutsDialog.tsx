@@ -17,6 +17,7 @@ const TOOL_KEYS: { keys: string; action: string }[] = [
   { keys: "N", action: "Drop a numbered pin" },
   { keys: "M", action: "Ruler" },
   { keys: "G", action: "Fog of war toggle" },
+  { keys: "U", action: "Place a torch light" },
 ];
 
 const EDIT_KEYS: { keys: string; action: string }[] = [
