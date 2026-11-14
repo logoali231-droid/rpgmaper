@@ -9,6 +9,7 @@ import {
   slugify,
 } from "../features/map/exportImage";
 import { buildWallsFile, extractWalls } from "../features/map/vtt";
+import { buildPlayableHtml } from "../features/map/playable";
 import type {
   FogGrid,
   Layers,
@@ -55,6 +56,7 @@ export function ExportDialog({
   const [compass, setCompass] = useState(false);
   const [showPins, setShowPins] = useState(true);
   const [quality, setQuality] = useState(0.92);
+  const [startHidden, setStartHidden] = useState(true);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -176,6 +178,27 @@ export function ExportDialog({
     }
   };
 
+  /** A single HTML file players can open offline: token, fog, walls, lights. */
+  const exportPlayable = () => {
+    const html = buildPlayableHtml({
+      name: mapName,
+      columns,
+      rows,
+      layers,
+      terrains,
+      labels,
+      fog,
+      startHidden,
+    });
+    downloadBlob(
+      new Blob([html], { type: "text/html" }),
+      `${slugify(mapName)}-play.html`
+    );
+    setNote(
+      "Playable map saved — one HTML file that runs offline, with the fog it has revealed so far kept in that browser."
+    );
+  };
+
   const exportWalls = () => {
     const file = buildWallsFile({
       name: mapName,
@@ -208,10 +231,10 @@ export function ExportDialog({
       >
         <header className="print-dialog-head">
           <div>
-            <h2 id="export-title">Export for a virtual tabletop</h2>
+            <h2 id="export-title">Export your map</h2>
             <p className="print-lede">
-              One flat image plus a wall file that uses the same pixels per
-              square, so your light and movement blockers line up.
+              A flat image and wall file for a virtual tabletop, or a
+              self-contained playable map that runs offline.
             </p>
           </div>
           <button
@@ -407,6 +430,35 @@ export function ExportDialog({
             <Chip variant="secondary" onClick={exportWalls}>
               Download walls JSON
             </Chip>
+          </section>
+
+          <section className="export-section">
+            <h3 className="export-title">Playable map</h3>
+            <p className="export-summary">
+              One self-contained HTML file: players move a token, fog lifts as
+              they explore, walls block movement and torches glow. No server,
+              no account, works offline.
+            </p>
+            <div className="export-row">
+              <span className="field-label">Fog</span>
+              <div className="print-segment">
+                <Chip
+                  size="sm"
+                  variant={startHidden ? "primary" : "secondary"}
+                  aria-pressed={startHidden}
+                  title="Start with the map hidden and let movement reveal it"
+                  onClick={() => setStartHidden((value) => !value)}
+                >
+                  Start fully hidden
+                </Chip>
+              </div>
+            </div>
+            <p className="export-hint">
+              GM marks, notes and pins are left out. Fog progress and the
+              token position are remembered in the browser that opens the
+              file, so a session can be closed and continued.
+            </p>
+            <Chip onClick={exportPlayable}>Download playable HTML</Chip>
           </section>
 
           {note ? <p className="export-note">{note}</p> : null}
