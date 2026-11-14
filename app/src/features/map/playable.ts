@@ -356,6 +356,8 @@ const RUNTIME = String.raw`
     var rect = canvas.getBoundingClientRect();
     var col = Math.floor((e.clientX - rect.left - ox) / cell);
     var row = Math.floor((e.clientY - rect.top - oy) / cell);
+    // Tapping into the dark would let a player jump past unexplored rooms.
+    if (fog[row] && fog[row][col]) return;
     moveTo(col, row);
   }
 
@@ -383,8 +385,9 @@ const RUNTIME = String.raw`
   });
 
   function resetFog() {
-    if (!window.confirm("Hide the whole map again?")) return;
-    fog = MAP.fog.map(function (row) { return row.map(function () { return true; }); });
+    if (!window.confirm("Return to the map's starting fog?")) return;
+    // Back to exactly how the file was exported, not necessarily all hidden.
+    fog = MAP.fog.map(function (row) { return row.slice(); });
     token = { col: MAP.start.col, row: MAP.start.row };
     reveal();
     save();
@@ -415,8 +418,18 @@ const RUNTIME = String.raw`
 /** The exported page: data in a JSON island, one inline script, no requests. */
 export function buildPlayableHtml(input: PlayableMapInput): string {
   const secret = new Set(["secret-door"]);
+  // Only ship terrains the map actually uses, so imported tilesets that were
+  // cleared from the palette don't bloat the file.
+  const used = new Set<string>(["grass"]);
+  for (const layer of [input.layers.floor, input.layers.objects, input.layers.walls]) {
+    for (const row of layer) {
+      for (const tile of row) {
+        if (tile.terrain) used.add(tile.terrain);
+      }
+    }
+  }
   const terrains = input.terrains
-    .filter((terrain) => terrain.id !== "secret-door")
+    .filter((terrain) => used.has(terrain.id) && terrain.id !== "secret-door")
     .map((terrain) => ({
       id: terrain.id,
       name: terrain.name,

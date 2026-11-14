@@ -63,7 +63,9 @@ function isBrushTool(tool: ToolId) {
     tool === "line" ||
     tool === "rect" ||
     tool === "fog" ||
-    tool === "fill"
+    tool === "fill" ||
+    // A light tap is an action, not a press: never turn it into the square menu.
+    tool === "light"
   );
 }
 
@@ -171,6 +173,8 @@ interface MapGridProps {
   showFog: boolean;
   playerView: boolean;
   lights: boolean;
+  /** Presentation mode: view only, no editing shortcuts or painting. */
+  presenting: boolean;
   compass: boolean;
   canUndo: boolean;
   canRedo: boolean;
@@ -312,6 +316,7 @@ export function MapGrid({
   showFog,
   playerView,
   lights,
+  presenting,
   compass,
   canUndo,
   canRedo,
@@ -525,6 +530,15 @@ export function MapGrid({
       y: (rect.height - rows * TILE_SIZE * zoom) / 2,
     });
   }, [columns, rows, camera, onCameraChange]);
+
+  // Entering presentation shows the whole map, not whichever corner the GM
+  // last zoomed into.
+  useEffect(() => {
+    if (!presenting) return;
+    userZoomed.current = false;
+    const timer = window.setTimeout(() => fitView(), 90);
+    return () => window.clearTimeout(timer);
+  }, [presenting, fitView]);
 
   /** Paint a batch, skipping squares this stroke already handled. */
   const paintCells = useCallback(
@@ -956,8 +970,14 @@ export function MapGrid({
       }
 
       if (tool === "light") {
-        // A torch prop carries its own warm glow, so one click lights a room.
+        // A torch prop carries its own warm glow, so one tap lights a square.
+        // The write is opened and closed here so it undoes as one step.
+        if (layers.objects[target.row]?.[target.col]?.terrain === "torch") {
+          return;
+        }
+        onStrokeStart();
         onPaintCells([target], "torch", "objects");
+        onStrokeEnd?.();
         if (!lights) onToggleLights();
         return;
       }
@@ -982,6 +1002,7 @@ export function MapGrid({
       tool,
       brushSize,
       layerTiles,
+      layers,
       selection,
       paintCells,
       finishStroke,
@@ -999,6 +1020,10 @@ export function MapGrid({
       onAddPin,
       onPinStart,
       clearLongPress,
+      onStrokeStart,
+      onStrokeEnd,
+      onToggleLights,
+      lights,
     ]
   );
 
@@ -1288,6 +1313,9 @@ export function MapGrid({
         return;
       }
 
+      // Presenting is a viewing mode: a stray key must not edit the map.
+      if (presenting) return;
+
       const key = event.key.toLowerCase();
       const command = event.metaKey || event.ctrlKey;
 
@@ -1387,6 +1415,7 @@ export function MapGrid({
     onTerrainChange,
     onUndo,
     pasteClipboard,
+    presenting,
     selection,
   ]);
 
@@ -1566,8 +1595,8 @@ export function MapGrid({
         }
       }
 
-      // 4c. Light pools from campfires and other light props.
-      if (lights) {
+              // 4c. Light pools from campfires and other light props.
+      if (lights && layerVisible.objects) {
         for (let row = 0; row < rows; row += 1) {
           for (let col = 0; col < columns; col += 1) {
             const placed = layers.objects[row]?.[col];
@@ -1980,12 +2009,14 @@ export function MapGrid({
         }
       />
 
-      <div className={`map-tools ${toolsOpen ? "is-open" : "is-collapsed"}`}>
+      <div
+        id="map-tools"
+        className={`map-tools ${toolsOpen ? "is-open" : "is-collapsed"}`}
+      >
         <button
           type="button"
           className="tools-toggle"
           aria-expanded={toolsOpen}
-          aria-controls="map-tools-body"
           onClick={() => setToolsOpen((open) => !open)}
         >
           <span>{TOOLS.find((entry) => entry.id === tool)?.label ?? "Tools"}</span>
@@ -2092,7 +2123,7 @@ export function MapGrid({
 
         <p className="tool-hint">
           {LAYER_HINTS[activeLayer]} · Shift = hollow · Alt-click picks ·
-          right-click menu · B L R F I E S V T M G N · [ ] size · ? shortcuts
+          right-click menu · B L R F I E S V T M G N U · [ ] size · ? shortcuts
         </p>
       </div>
 
@@ -2336,12 +2367,14 @@ export function MapGrid({
         ) : null}
       </div>
 
-      <div className={`map-inspect ${paletteOpen ? "is-open" : "is-collapsed"}`}>
+      <div
+        id="palette"
+        className={`map-inspect ${paletteOpen ? "is-open" : "is-collapsed"}`}
+      >
         <button
           type="button"
           className="sheet-toggle"
           aria-expanded={paletteOpen}
-          aria-controls="palette-body"
           onClick={() => setPaletteOpen((open) => !open)}
         >
           <span className="sheet-toggle-text">

@@ -1358,6 +1358,7 @@ export function MapCanvas() {
             onToggleSymmetry={() => setSymmetry((value) => !value)}
             onToggleFog={() => setShowFog((value) => !value)}
             onEnterPlayerMode={enterPlayerMode}
+            presenting={presenting}
             onToggleLights={() => setLights((value) => !value)}
             onToggleCompass={() => setCompass((value) => !value)}
             onToggleFogCells={onToggleFogCells}
